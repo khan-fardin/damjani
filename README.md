@@ -57,7 +57,7 @@ Matching 10 stores × every category on day one is how projects stall. Start wit
 
 ## Prototype (Phase 0–1)
 
-The current app is a design prototype for laptop price comparison. It uses mock data only; there is no database, scraper, account system, or live store feed.
+The current app is Damjani's laptop price-comparison prototype. It has a Drizzle/Neon catalog seeded with 20 Techland laptop configurations, plus verified Star Tech offers when an exact configuration match is found. Mock data remains available as a fallback when the database is not configured. No account or checkout system is included.
 
 ### Run locally
 
@@ -72,9 +72,25 @@ Open `http://localhost:3000`. The main routes are `/`, `/search`, `/c/laptops`, 
 
 - `app/` — Next.js App Router pages and shared styles
 - `components/` — reusable catalog, search, and product comparison UI
-- `data/mock-data.json` — 20 sample laptop models and price rows for five local stores
+- `data/mock-data.json` — illustrative fallback catalog for five local stores
 - `lib/` — typed catalog mapping, formatting, and site configuration
 
-The sample catalog intentionally includes out-of-stock, pre-order, up-coming, call-for-price, and single-store cases. Prices, timestamps, store listings, and history are illustrative and must not be treated as current offers. The working name is **damjani**; domain and social handle availability have not been checked.
+In live mode, the homepage, laptop category, and search show Damjani's canonical product cards with their lowest current listed price. The detail page lists matched store offers from lowest to highest. An offer is attached only when its model and known configuration details match; the 20 products can therefore have different store counts. Prices and availability can change and should be confirmed at the retailer. In fallback mode, sample prices and timestamps remain illustrative. The working name is **damjani**; domain and social handle availability have not been checked.
 
 The GitHub Actions workflow is in `.github/workflows/ci.yml`. This workspace is not initialized as a Git repository yet, so CI will activate after repository setup.
+
+## Phase 2: database and scraper proof of concept
+
+The Drizzle schema is in `db/schema.ts`; generated SQL migrations are stored in `db/migrations/`. Database commands load `DATABASE_URL` from `.env.local`. Copy `.env.example` to see the required variable names, then set `DATABASE_URL` to the Neon connection string and `SCRAPER_CONTACT` to a monitored contact before running the scraper.
+
+The Star Tech adapter discovers laptop URLs from its sitemap. The Techland BD adapter starts with its laptop recommendation and best-seller collections, then fills from its laptop catalog. The adapters rate-limit to one request per second per origin and check robots.txt before every request. To refresh the seed retailer data and build Damjani's 20-product catalog, run:
+
+```bash
+npm run scrape -- techland --category laptop --limit 20
+npm run db:seed-laptops
+npm run scrape:startech-matches
+```
+
+The homepage, laptop category, and search display canonical Damjani laptop cards with the lowest available listed price. Opening a card shows matching retailer offers from lowest to highest. Star Tech offers are linked only when the model and known configuration details match; a missing offer means no exact match was verified, not that the product is unavailable at that store. Every offer links to its source and includes its last checked time. Prices and stock can change, so confirm them at the retailer.
+
+Ryans is intentionally excluded: its published terms prohibit systematic retrieval and automated scraping without written permission. Check each store’s current terms and obtain permission where required before running live collection. The scraper never bypasses robots.txt restrictions.

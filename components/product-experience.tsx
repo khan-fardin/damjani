@@ -8,7 +8,7 @@ import { getOffers, getPricedOffers } from "@/lib/catalog";
 import { ProductArt } from "@/components/product-art";
 
 function StockPill({ status }: { status: StoreOffer["availability"] }) {
-  const labels = { in_stock: "In stock", out_of_stock: "Out of stock", preorder: "Pre-order", upcoming: "Up-coming", call_for_price: "Call for price" };
+  const labels = { in_stock: "In stock", out_of_stock: "Out of stock", preorder: "Pre-order", upcoming: "Up-coming", call_for_price: "Call for price", unknown: "Check with store" };
   return <span className={`stock-pill stock-${status}`}><i />{labels[status]}</span>;
 }
 
@@ -25,7 +25,7 @@ function PriceHistory({ offer }: { offer: StoreOffer }) {
   </section>;
 }
 
-export function ProductExperience({ product }: { product: ProductSummary }) {
+export function ProductExperience({ product, live = false }: { product: ProductSummary; live?: boolean }) {
   const [variantId, setVariantId] = useState(product.variants[0].id);
   const offers = getOffers(product, variantId);
   const priced = getPricedOffers(product, variantId);
@@ -35,6 +35,10 @@ export function ProductExperience({ product }: { product: ProductSummary }) {
   const average = priced.length ? Math.round(priced.reduce((sum, offer) => sum + offer.price!, 0) / priced.length) : null;
   const chartOffer = useMemo(() => winner ?? priced[0], [winner, priced]);
   const staleOffer = offers.find((offer) => offer.updated.includes("days ago"));
+  const latestScrape = Math.max(...offers.map((offer) => Date.parse(offer.updated)).filter(Number.isFinite));
+  const freshnessText = live && Number.isFinite(latestScrape)
+    ? new Date(latestScrape).toLocaleString("en-BD", { dateStyle: "medium", timeStyle: "short" })
+    : staleOffer?.updated ?? "1h ago";
   return <>
     <div className="breadcrumbs"><Link href="/">Home</Link><span>/</span><Link href="/c/laptops">Laptops</Link><span>/</span><span>{product.brand}</span><span>/</span><span>{product.series}</span></div>
     <section className="product-hero">
@@ -49,17 +53,17 @@ export function ProductExperience({ product }: { product: ProductSummary }) {
       </div>
     </section>
 
-    <section className="offers-section"><div className="section-head offers-heading"><div><span className="eyebrow">STORE COMPARISON · SAMPLE DATA</span><h2>Compare prices <span className="section-count">{offers.length} stores</span></h2></div><FreshnessLabel stale={Boolean(staleOffer)} updated={staleOffer?.updated ?? "1h ago"} /></div>
+    <section className="offers-section"><div className="section-head offers-heading"><div><span className="eyebrow">STORE COMPARISON · {live ? "LIVE LISTINGS" : "SAMPLE DATA"}</span><h2>Compare prices <span className="section-count">{offers.length} stores</span></h2></div><FreshnessLabel stale={Boolean(staleOffer) || (live && Number.isFinite(latestScrape) && Date.now() - latestScrape > 48 * 60 * 60 * 1000)} updated={freshnessText} /></div>
       {allUnavailable && <div className="inline-notice"><span>ⓘ</span><span>This configuration is currently unavailable at every tracked store. Listed prices may be out of date.</span></div>}
-      {offers.length === 1 && <div className="inline-notice"><span>✳</span><span>Only on {offers[0].store} in our sample catalog.</span></div>}
+      {offers.length === 1 && <div className="inline-notice"><span>✳</span><span>{live ? `One store listing is currently connected: ${offers[0].store}.` : `Only on ${offers[0].store} in our sample catalog.`}</span></div>}
       <div className="offer-table-wrap"><table className="offer-table"><thead><tr><th>Store</th><th>Price</th><th>Availability</th><th>Updated</th><th><span className="sr-only">Visit</span></th></tr></thead><tbody>{[...offers].sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity)).map((offer) => <tr key={offer.store} className={winner?.store === offer.store ? "winner-row" : ""}><td><div className="store-name-cell"><span className={`store-monogram mono-${offer.store.split(" ")[0].toLowerCase()}`}>{offer.store.slice(0, 1)}</span><span>{offer.store}</span>{winner?.store === offer.store && <span className="desktop-best-badge">Lowest price</span>}</div></td><td><div className={`offer-price ${offer.price === null || offer.availability === "out_of_stock" ? "price-muted" : ""}`}>{offer.price === null ? "Call for price" : formatPrice(offer.price)}{offer.regularPrice && <del>{formatPrice(offer.regularPrice)}</del>}</div>{winner?.store === offer.store && <span className="mobile-best-badge">Lowest price</span>}</td><td><StockPill status={offer.availability} /></td><td><span className="updated-time">{offer.updated}</span></td><td><a className="visit-button" href={offer.url} target="_blank" rel="nofollow sponsored noopener" aria-label={`Visit ${offer.store}`}>Visit store <span>↗</span></a></td></tr>)}</tbody></table></div>
       <div className="offer-disclaimer">Prices are collected automatically and may differ on the store’s website. Please confirm the final price before buying.</div>
     </section>
     {chartOffer && chartOffer.history.length > 1 && <PriceHistory offer={chartOffer} />}
     <section className="specs-section"><div className="section-head"><div><span className="eyebrow">AT A GLANCE</span><h2>Specifications</h2></div><span className="specs-caption">{product.variants.find((variant) => variant.id === variantId)?.label}</span></div><div className="specs-grid">{Object.entries(product.variants.find((variant) => variant.id === variantId)?.specs ?? {}).map(([key, value]) => <div key={key} className="spec-item"><span>{key}</span><strong>{value}</strong></div>)}</div></section>
-    <FreshnessNote />
+    <FreshnessNote live={live} />
   </>;
 }
 
 function FreshnessLabel({ stale, updated }: { stale: boolean; updated: string }) { return <span className={`freshness-label ${stale ? "freshness-stale" : ""}`}><i /> Updated {updated}</span>; }
-function FreshnessNote() { return <div className="freshness-note"><span>◷</span><div><strong>About these prices</strong><p>Sample prices and timestamps are included to demonstrate the comparison experience. Real store data is not connected yet.</p></div></div>; }
+function FreshnessNote({ live }: { live: boolean }) { return <div className="freshness-note"><span>◷</span><div><strong>About these prices</strong><p>{live ? "Prices and stock are collected from public retailer listings and can change. Visit the store to confirm before buying." : "Sample prices and timestamps are included to demonstrate the comparison experience. Real store data is not connected yet."}</p></div></div>; }

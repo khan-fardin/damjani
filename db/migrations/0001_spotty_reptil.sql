@@ -1,0 +1,1 @@
+CREATE INDEX "listings_title_trgm" ON "listings" USING gin ("raw_title" gin_trgm_ops);

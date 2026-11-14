@@ -1,4 +1,4 @@
-export type Availability = "in_stock" | "out_of_stock" | "preorder" | "upcoming" | "call_for_price";
+export type Availability = "in_stock" | "out_of_stock" | "preorder" | "upcoming" | "call_for_price" | "unknown";
 
 export type PricePoint = { date: string; price: number };
 

@@ -22,12 +22,14 @@ Design first, then real data, then scale. Each phase ends with something you can
 **Done when:** you can click through the whole experience and it *feels* right.
 
 ## Phase 2: Scraper proof of concept
-- [ ] Postgres + Drizzle schema from `DATABASE.md`
-- [ ] Scraper core: fetcher with rate limit/retry/robots check, normalizers (price, Bangla digits, title)
-- [ ] **2 store adapters** (pick the easiest, preferably with JSON-LD or a JSON endpoint)
+- [x] Postgres + Drizzle schema from `DATABASE.md`; initial migration applied to Neon
+- [x] Scraper core: fetcher with rate limit/retry/robots check, normalizers (price, Bangla digits, title)
+- [x] **2 store adapters** (Star Tech sitemap; Techland BD curated laptop collections + structured product metadata)
 - [ ] Adapter tests against saved HTML fixtures
-- [ ] CLI: `pnpm scrape startech --category laptop`
-- [ ] `scrape_runs` logging + validation rules
+- [x] CLI: `npm run scrape -- startech --category laptop --limit 10`
+- [x] `scrape_runs` logging + validation rules
+
+Live collection needs a real monitored `SCRAPER_CONTACT` in `.env.local`, saved-page fixtures, and a final source permission review. The Techland adapter prioritizes the retailer's recommended and best-seller laptop collections, then its laptop catalog; it records this order for the live listing view. Ryans is excluded because its terms prohibit automated extraction without written permission.
 
 **Done when:** laptops from 2 stores land in the DB with sane prices and URLs.
 
@@ -42,6 +44,7 @@ Design first, then real data, then scale. Each phase ends with something you can
 
 ## Phase 4: Connect UI to real data
 - [ ] Replace the mock data layer with DB queries (components unchanged)
+- [x] Build Damjani product cards from canonical laptop records, surface the lowest current offer, and show matched retailer offers low-to-high on product pages
 - [ ] ISR + on-demand revalidation after scrape batches
 - [ ] Postgres FTS + `pg_trgm` search with typo tolerance
 - [ ] `/go/[listingId]` redirect with click logging

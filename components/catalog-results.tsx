@@ -2,14 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { ProductCard } from "@/components/product-card";
-import { products } from "@/lib/catalog";
 import type { ProductSummary } from "@/lib/types";
 
 export function CatalogResults({ items, title, description }: { items: ProductSummary[]; title: string; description?: string }) {
   const [brand, setBrand] = useState("All brands");
   const [inStock, setInStock] = useState(false);
   const [sort, setSort] = useState("recommended");
-  const brands = ["All brands", ...Array.from(new Set(products.map((product) => product.brand))).sort()];
+  const brands = ["All brands", ...Array.from(new Set(items.map((product) => product.brand))).sort()];
   const visible = useMemo(() => {
     let result = items.filter((product) => brand === "All brands" || product.brand === brand);
     if (inStock) result = result.filter((product) => Object.values(product.offers).flat().some((offer) => offer.availability === "in_stock"));
