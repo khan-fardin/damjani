@@ -1,0 +1,4 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+export const metadata: Metadata = { title: "About damjani" };
+export default function AboutPage() { return <section className="about-page shell"><div className="breadcrumbs"><Link href="/">Home</Link><span>/</span><span>About</span></div><span className="eyebrow">ABOUT DAMJANI</span><h1>Better choices<br />start with <span>clarity.</span></h1><p>damjani is a prototype for comparing technology prices across Bangladesh. We want to make it easier to understand what a product costs, where it is available, and how fresh that information is.</p><div className="about-notice"><span>ⓘ</span><div><strong>This is a design prototype.</strong><p>Prices, stock information, and price history are mock data created for demonstration. No live store feeds are connected.</p></div></div><Link href="/c/laptops" className="button button-dark">Explore laptop catalog <span>→</span></Link></section>; }
