@@ -90,7 +90,9 @@ async function queryLiveSearch(databaseUrl: string, query: string) {
     ts_rank_cd(${productVector}, ${queryVector}),
     ts_rank_cd(${listingVector}, ${queryVector}),
     similarity(${schema.products.name}, ${query}),
-    similarity(${schema.listings.rawTitle}, ${query})
+    similarity(${schema.listings.rawTitle}, ${query}),
+    word_similarity(${query}, ${schema.products.name}),
+    word_similarity(${query}, ${schema.listings.rawTitle})
   )`;
   return db.select({
     slug: schema.products.slug,
@@ -107,6 +109,8 @@ async function queryLiveSearch(databaseUrl: string, query: string) {
         sql`${listingVector} @@ ${queryVector}`,
         sql`${schema.products.name} % ${query}`,
         sql`${schema.listings.rawTitle} % ${query}`,
+        sql`${query} <% ${schema.products.name}`,
+        sql`${query} <% ${schema.listings.rawTitle}`,
         sql`${schema.products.name} ILIKE ${`${query}%`}`,
         sql`${schema.listings.rawTitle} ILIKE ${`${query}%`}`,
       ),

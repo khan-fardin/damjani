@@ -6,7 +6,7 @@ import { LIVE_CATALOG_CACHE_TAG } from "@/lib/cache-tags";
 export const runtime = "nodejs";
 
 function authorized(request: Request) {
-  const expected = process.env.REVALIDATE_TOKEN;
+  const expected = process.env.REVALIDATE_TOKEN?.trim();
   const supplied = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
   if (!expected || !supplied) return false;
   const expectedBytes = Buffer.from(expected);
@@ -15,7 +15,7 @@ function authorized(request: Request) {
 }
 
 export async function POST(request: Request) {
-  if (!process.env.REVALIDATE_TOKEN) {
+  if (!process.env.REVALIDATE_TOKEN?.trim()) {
     return NextResponse.json({ error: "Revalidation is not configured." }, { status: 503 });
   }
   if (!authorized(request)) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
