@@ -46,9 +46,9 @@ Live collection needs a real monitored `SCRAPER_CONTACT` in `.env.local`, saved-
 - [x] Replace the mock data layer with DB queries (components unchanged)
 - [x] Build Damjani product cards from canonical laptop records, surface the lowest current offer, and show matched retailer offers low-to-high on product pages
 - [x] Cache live catalog queries for 15 minutes and invalidate after scraper/seed batches or approved matches
-- [ ] Postgres FTS + `pg_trgm` search with typo tolerance
-- [ ] `/go/[listingId]` redirect with click logging
-- [ ] SEO: metadata, JSON-LD, sitemap
+- [x] Postgres FTS + `pg_trgm` search with typo tolerance
+- [x] `/go/[listingId]` redirect with click logging
+- [x] SEO: canonical metadata, product JSON-LD, sitemap and robots rules
 
 ## Phase 5: More stores + automation (ongoing)
 - [ ] Add stores one at a time (target 5, then 10)

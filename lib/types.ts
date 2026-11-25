@@ -9,6 +9,7 @@ export type Variant = {
 };
 
 export type StoreOffer = {
+  listingId?: number;
   store: string;
   price: number | null;
   regularPrice?: number;

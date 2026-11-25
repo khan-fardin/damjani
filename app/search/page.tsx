@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CatalogResults } from "@/components/catalog-results";
 import { SearchBar } from "@/components/search-bar";
-import { getLiveCatalog } from "@/lib/live-catalog";
+import { getLiveCatalog, searchLiveCatalog } from "@/lib/live-catalog";
 import { searchProducts } from "@/lib/catalog";
 
 export const metadata: Metadata = { title: "Search laptops" };
@@ -10,11 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function SearchPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { q = "" } = await searchParams;
   const [liveProducts, sampleMatches] = await Promise.all([getLiveCatalog(), Promise.resolve(searchProducts(q))]);
-  const words = q.toLowerCase().trim().split(/\s+/).filter(Boolean);
-  const liveMatches = liveProducts.filter((product) => {
-    const searchable = `${product.name} ${product.brand} ${product.series} ${product.variants.map((variant) => Object.values(variant.specs).join(" ")).join(" ")}`.toLowerCase();
-    return words.every((word) => searchable.includes(word));
-  });
+  const liveMatches = q.trim() ? await searchLiveCatalog(q) : liveProducts;
 
   return <div className="browse-page shell">
     <div className="page-intro">

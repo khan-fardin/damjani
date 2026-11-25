@@ -64,7 +64,10 @@ export const products = pgTable("products", {
   imageUrl: text("image_url"),
   description: text("description"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => [
+  index("products_name_trgm").using("gin", sql`${table.name} gin_trgm_ops`),
+  index("products_name_fts").using("gin", sql`to_tsvector('simple', ${table.name})`),
+]);
 
 export const variants = pgTable("variants", {
   id: serial("id").primaryKey(),
@@ -104,6 +107,7 @@ export const listings = pgTable("listings", {
   index("listings_variant_idx").on(table.variantId).where(sql`${table.isActive} = true`),
   index("listings_status_idx").on(table.matchStatus),
   index("listings_title_trgm").using("gin", sql`${table.rawTitle} gin_trgm_ops`),
+  index("listings_title_fts").using("gin", sql`to_tsvector('simple', ${table.rawTitle})`),
 ]);
 
 export const priceSnapshots = pgTable("price_snapshots", {

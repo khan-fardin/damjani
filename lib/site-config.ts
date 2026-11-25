@@ -1,5 +1,6 @@
 export const siteConfig = {
   name: "damjani",
+  url: "https://damjani.vercel.app",
   tagline: "Find the best tech price in Bangladesh",
   description: "Compare laptop prices across trusted technology stores in Bangladesh.",
   stores: ["Star Tech", "Ryans", "Techland BD", "Skyland", "Shams Technology"],

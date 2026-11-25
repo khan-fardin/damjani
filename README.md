@@ -94,6 +94,8 @@ npm run match:reviews
 
 The homepage, laptop category, and search display canonical Damjani laptop cards with the lowest available listed price. Opening a card shows matching retailer offers from lowest to highest. Star Tech offers are linked only when the model and known configuration details match; a missing offer means no exact match was verified, not that the product is unavailable at that store. Every offer links to its source and includes its last checked time. Prices and stock can change, so confirm them at the retailer.
 
+Live search uses PostgreSQL full-text ranking and trigram similarity over canonical product names and matched retailer titles. Product-page store links pass through `/go/[listingId]`, which records the click before redirecting to the retailer. Product pages publish canonical metadata and Product/AggregateOffer JSON-LD; `/sitemap.xml` is built from the live catalog and `/robots.txt` excludes admin and API routes.
+
 `npm run match:reviews` scores unmatched listings against the canonical laptop catalog and stores plausible suggestions for a person to review. To approve or reject suggestions, set `ADMIN_REVIEW_TOKEN` in `.env.local` and in Vercel, then open `/admin/matches`. The review endpoint requires that token and unresolved offers are not shown on public product pages.
 
 The live catalog query is cached for up to 15 minutes. For immediate refreshes after a scrape, set the same random `REVALIDATE_TOKEN` in Vercel and the scraper environment, and set `SITE_REVALIDATE_URL` to the site's `/api/revalidate` endpoint. Scrape and seed commands then invalidate the catalog cache; approving a match does the same. If those scraper variables are absent, the site still refreshes from the database within 15 minutes.
