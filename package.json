@@ -11,6 +11,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
     "db:seed-laptops": "node --env-file=.env.local --import tsx apps/scraper/src/seed-laptops.ts",
+    "match:reviews": "node --env-file=.env.local --import tsx apps/scraper/src/queue-match-reviews.ts",
     "scrape:startech-matches": "node --env-file=.env.local --import tsx apps/scraper/src/match-startech.ts",
     "scrape": "node --env-file=.env.local --import tsx apps/scraper/src/cli.ts"
   },

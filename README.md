@@ -89,8 +89,11 @@ The Star Tech adapter discovers laptop URLs from its sitemap. The Techland BD ad
 npm run scrape -- techland --category laptop --limit 20
 npm run db:seed-laptops
 npm run scrape:startech-matches
+npm run match:reviews
 ```
 
 The homepage, laptop category, and search display canonical Damjani laptop cards with the lowest available listed price. Opening a card shows matching retailer offers from lowest to highest. Star Tech offers are linked only when the model and known configuration details match; a missing offer means no exact match was verified, not that the product is unavailable at that store. Every offer links to its source and includes its last checked time. Prices and stock can change, so confirm them at the retailer.
+
+`npm run match:reviews` scores unmatched listings against the canonical laptop catalog and stores plausible suggestions for a person to review. To approve or reject suggestions, set `ADMIN_REVIEW_TOKEN` in `.env.local` and in Vercel, then open `/admin/matches`. The review endpoint requires that token and unresolved offers are not shown on public product pages.
 
 Ryans is intentionally excluded: its published terms prohibit systematic retrieval and automated scraping without written permission. Check each store’s current terms and obtain permission where required before running live collection. The scraper never bypasses robots.txt restrictions.

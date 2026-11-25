@@ -34,13 +34,13 @@ Live collection needs a real monitored `SCRAPER_CONTACT` in `.env.local`, saved-
 **Done when:** laptops from 2 stores land in the DB with sane prices and URLs.
 
 ## Phase 3: Matching + catalog
-- [ ] Attribute extractors for laptops (brand, model code, CPU, RAM, storage, screen)
-- [ ] Canonical `products` / `variants` seeding (from one reference store, then reviewed)
-- [ ] Matcher pipeline (MPN exact → scored candidates → thresholds)
-- [ ] Admin review queue: approve / reject / create variant
-- [ ] Matching memory (approved mappings are reused)
+- [x] Attribute extractors for laptops (brand, model code, CPU, RAM, storage, screen)
+- [x] Canonical `products` / `variants` seeding (from one reference store, then reviewed)
+- [x] Matcher pipeline (exact candidates remain linked; plausible uncertain candidates are scored for review)
+- [x] Admin review queue: approve / reject suggestions
+- [x] Matching memory (approved mappings are retained on the listing when it is refreshed)
 
-**Done when:** ≥ 85% of listings in the two stores are matched correctly (spot-check 100 by hand).
+**Done when:** ≥ 85% of listings in the two stores are matched correctly (spot-check 100 by hand). Review tooling is implemented; this accuracy target still needs a manual audit.
 
 ## Phase 4: Connect UI to real data
 - [ ] Replace the mock data layer with DB queries (components unchanged)
