@@ -1,8 +1,10 @@
 import { and, eq } from "drizzle-orm";
 import { timingSafeEqual } from "node:crypto";
+import { revalidateTag } from "next/cache";
 import { NextResponse } from "next/server";
 import { db } from "@/db/index";
 import { brands, listings, matchReviews, products, stores, variants } from "@/db/schema";
+import { LIVE_CATALOG_CACHE_TAG } from "@/lib/cache-tags";
 
 export const runtime = "nodejs";
 
@@ -68,5 +70,6 @@ export async function POST(request: Request) {
     resolvedBy: "admin",
     resolvedAt: new Date(),
   }).where(eq(matchReviews.id, review.id));
+  if (body.action === "approve") revalidateTag(LIVE_CATALOG_CACHE_TAG);
   return NextResponse.json({ ok: true });
 }

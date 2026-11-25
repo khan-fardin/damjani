@@ -43,9 +43,9 @@ Live collection needs a real monitored `SCRAPER_CONTACT` in `.env.local`, saved-
 **Done when:** ≥ 85% of listings in the two stores are matched correctly (spot-check 100 by hand). Review tooling is implemented; this accuracy target still needs a manual audit.
 
 ## Phase 4: Connect UI to real data
-- [ ] Replace the mock data layer with DB queries (components unchanged)
+- [x] Replace the mock data layer with DB queries (components unchanged)
 - [x] Build Damjani product cards from canonical laptop records, surface the lowest current offer, and show matched retailer offers low-to-high on product pages
-- [ ] ISR + on-demand revalidation after scrape batches
+- [x] Cache live catalog queries for 15 minutes and invalidate after scraper/seed batches or approved matches
 - [ ] Postgres FTS + `pg_trgm` search with typo tolerance
 - [ ] `/go/[listingId]` redirect with click logging
 - [ ] SEO: metadata, JSON-LD, sitemap

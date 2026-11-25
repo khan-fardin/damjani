@@ -57,7 +57,7 @@ Matching 10 stores × every category on day one is how projects stall. Start wit
 
 ## Prototype (Phase 0–1)
 
-The current app is Damjani's laptop price-comparison prototype. It has a Drizzle/Neon catalog seeded with 20 Techland laptop configurations, plus verified Star Tech offers when an exact configuration match is found. Mock data remains available as a fallback when the database is not configured. No account or checkout system is included.
+The current app is Damjani's laptop price-comparison prototype. It has a Drizzle/Neon catalog seeded from up to 50 Techland laptop listings, with the homepage spotlighting 20 and the full catalog available on the laptop page. Verified Star Tech offers appear when an exact configuration match is found. Mock data remains available as a fallback when the database is not configured. No account or checkout system is included.
 
 ### Run locally
 
@@ -83,10 +83,10 @@ The GitHub Actions workflow is in `.github/workflows/ci.yml`. This workspace is 
 
 The Drizzle schema is in `db/schema.ts`; generated SQL migrations are stored in `db/migrations/`. Database commands load `DATABASE_URL` from `.env.local`. Copy `.env.example` to see the required variable names, then set `DATABASE_URL` to the Neon connection string and `SCRAPER_CONTACT` to a monitored contact before running the scraper.
 
-The Star Tech adapter discovers laptop URLs from its sitemap. The Techland BD adapter starts with its laptop recommendation and best-seller collections, then fills from its laptop catalog. The adapters rate-limit to one request per second per origin and check robots.txt before every request. To refresh the seed retailer data and build Damjani's 20-product catalog, run:
+The Star Tech adapter discovers laptop URLs from its sitemap. The Techland BD adapter starts with its laptop recommendation and best-seller collections, then fills from its laptop catalog. The adapters rate-limit to one request per second per origin and check robots.txt before every request. The canonical seed balances the available brands across the retailer listings, deduplicates repeated products, and keeps the homepage focused on 20 featured cards. To refresh up to 50 source listings and seed the catalog, run:
 
 ```bash
-npm run scrape -- techland --category laptop --limit 20
+npm run scrape -- techland --category laptop --limit 50
 npm run db:seed-laptops
 npm run scrape:startech-matches
 npm run match:reviews
@@ -95,5 +95,7 @@ npm run match:reviews
 The homepage, laptop category, and search display canonical Damjani laptop cards with the lowest available listed price. Opening a card shows matching retailer offers from lowest to highest. Star Tech offers are linked only when the model and known configuration details match; a missing offer means no exact match was verified, not that the product is unavailable at that store. Every offer links to its source and includes its last checked time. Prices and stock can change, so confirm them at the retailer.
 
 `npm run match:reviews` scores unmatched listings against the canonical laptop catalog and stores plausible suggestions for a person to review. To approve or reject suggestions, set `ADMIN_REVIEW_TOKEN` in `.env.local` and in Vercel, then open `/admin/matches`. The review endpoint requires that token and unresolved offers are not shown on public product pages.
+
+The live catalog query is cached for up to 15 minutes. For immediate refreshes after a scrape, set the same random `REVALIDATE_TOKEN` in Vercel and the scraper environment, and set `SITE_REVALIDATE_URL` to the site's `/api/revalidate` endpoint. Scrape and seed commands then invalidate the catalog cache; approving a match does the same. If those scraper variables are absent, the site still refreshes from the database within 15 minutes.
 
 Ryans is intentionally excluded: its published terms prohibit systematic retrieval and automated scraping without written permission. Check each store’s current terms and obtain permission where required before running live collection. The scraper never bypasses robots.txt restrictions.

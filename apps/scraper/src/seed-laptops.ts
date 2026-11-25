@@ -1,6 +1,7 @@
-import { and, eq, isNotNull } from "drizzle-orm";
+import { and, eq, inArray, isNotNull } from "drizzle-orm";
 import { db } from "@/db/index";
-import { brands, categories, listings, products, stores, variants } from "@/db/schema";
+import { brands, categories, listings, matchReviews, products, stores, variants } from "@/db/schema";
+import { revalidateSiteCatalog } from "@/apps/scraper/src/lib/revalidate-site";
 
 function slugify(value: string) {
   return value.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
@@ -17,6 +18,8 @@ function brandFromTitle(title: string) {
   const first = title.trim().split(/\s+/)[0].replace(/[^a-z]/gi, "").toLowerCase();
   const known: Record<string, string> = {
     acer: "Acer", msi: "MSI", lenovo: "Lenovo", hp: "HP", tecno: "Tecno", asus: "ASUS", dell: "Dell", apple: "Apple",
+    microsoft: "Microsoft", samsung: "Samsung", huawei: "Huawei", gigabyte: "Gigabyte", razer: "Razer", infinix: "Infinix",
+    chuwi: "Chuwi", walton: "Walton", avita: "Avita", fujitsu: "Fujitsu", lg: "LG", honor: "HONOR",
   };
   return known[first] ?? first.toUpperCase();
 }
@@ -35,10 +38,47 @@ async function main() {
   const latestByRank = new Map<number, typeof candidates[number]>();
   for (const row of candidates) {
     const rank = Number(row.rawSpecs._sourceRank);
-    if (rank > 0 && rank <= 20 && !latestByRank.has(rank)) latestByRank.set(rank, row);
+    if (rank > 0 && rank <= 50 && !latestByRank.has(rank)) latestByRank.set(rank, row);
   }
-  const canonicalRows = [...latestByRank.entries()].sort(([a], [b]) => a - b).map(([, row]) => row);
+  const rankedRows = [...latestByRank.entries()].sort(([a], [b]) => a - b).map(([, row]) => row);
+  const uniqueRows: typeof rankedRows = [];
+  const seenProducts = new Set<string>();
+  for (const row of rankedRows) {
+    const key = slugify(displayName(row.title));
+    if (seenProducts.has(key)) continue;
+    seenProducts.add(key);
+    uniqueRows.push(row);
+  }
+  const byBrand = new Map<string, typeof rankedRows>();
+  for (const row of uniqueRows) {
+    const key = brandFromTitle(row.title);
+    byBrand.set(key, [...(byBrand.get(key) ?? []), row]);
+  }
+  const brandBuckets = [...byBrand.values()];
+  const canonicalRows: typeof rankedRows = [];
+  for (let depth = 0; canonicalRows.length < uniqueRows.length; depth += 1) {
+    let added = false;
+    for (const bucket of brandBuckets) {
+      if (bucket[depth]) {
+        canonicalRows.push(bucket[depth]);
+        added = true;
+        if (canonicalRows.length === uniqueRows.length) break;
+      }
+    }
+    if (!added) break;
+  }
   const selectedIds = new Set(canonicalRows.map((row) => row.id));
+  const selectedSlugs = new Set(canonicalRows.map((row) => slugify(displayName(row.title))));
+  const existingVariants = await db.select({ id: variants.id, productSlug: products.slug }).from(variants)
+    .innerJoin(products, eq(variants.productId, products.id)).innerJoin(categories, eq(products.categoryId, categories.id))
+    .where(eq(categories.slug, "laptop"));
+  const staleVariantIds = existingVariants.filter((variant) => !selectedSlugs.has(variant.productSlug)).map((variant) => variant.id);
+  if (staleVariantIds.length) {
+    await db.update(listings).set({ variantId: null, matchStatus: "unmatched", matchConfidence: null })
+      .where(inArray(listings.variantId, staleVariantIds));
+    await db.update(matchReviews).set({ status: "rejected", resolvedBy: "catalog refresh", resolvedAt: new Date() })
+      .where(and(eq(matchReviews.status, "open"), inArray(matchReviews.suggestedVariant, staleVariantIds)));
+  }
   for (const stale of candidates.filter((row) => !selectedIds.has(row.id))) {
     await db.update(listings).set({ isActive: false, variantId: null, matchStatus: "unmatched", matchConfidence: null })
       .where(eq(listings.id, stale.id));
@@ -81,6 +121,7 @@ async function main() {
   }
 
   process.stdout.write(`Seeded ${canonicalRows.length} canonical laptop configurations from Techland BD.\n`);
+  await revalidateSiteCatalog();
 }
 
 void main().catch((error: unknown) => {

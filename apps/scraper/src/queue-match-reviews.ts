@@ -18,8 +18,9 @@ async function main() {
     specs: variants.specs,
     product: products.name,
     brand: brands.name,
-  }).from(variants).innerJoin(products, eq(variants.productId, products.id)).innerJoin(brands, eq(products.brandId, brands.id));
-  const candidates = canonicalRows.map((row) => ({ ...row, id: Number(row.id) }));
+  }).from(variants).innerJoin(products, eq(variants.productId, products.id)).innerJoin(brands, eq(products.brandId, brands.id))
+    .innerJoin(listings, eq(listings.variantId, variants.id)).where(eq(listings.isActive, true));
+  const candidates = [...new Map(canonicalRows.map((row) => [row.id, { ...row, id: Number(row.id) }])).values()];
   const rejectedRows = await db.select({ listingId: matchReviews.listingId, variantId: matchReviews.suggestedVariant })
     .from(matchReviews).where(eq(matchReviews.status, "rejected"));
   const rejectedByListing = new Map<number, Set<number>>();

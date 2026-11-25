@@ -7,6 +7,7 @@ import { validateListing } from "@/apps/scraper/src/core/validate";
 import { db } from "@/db/index";
 import { listings, scrapeRuns, stores } from "@/db/schema";
 import { persistListing } from "@/apps/scraper/src/lib/persist-listing";
+import { revalidateSiteCatalog } from "@/apps/scraper/src/lib/revalidate-site";
 
 type Target = { listingId: number; variantId: number; title: string; specs: Record<string, string> };
 
@@ -171,6 +172,7 @@ async function main() {
     await db.update(scrapeRuns).set({ finishedAt: new Date(), attempted, succeeded: matched, failed, errorSample }).where(eq(scrapeRuns.id, run.id));
   }
   process.stdout.write(`Star Tech matched ${matched}/${canonicalTargets.length} exact laptop configurations after ${attempted} product-page requests in this run.\n`);
+  if (matched > 0) await revalidateSiteCatalog();
   if (failed) process.exitCode = 1;
 }
 

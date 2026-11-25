@@ -6,6 +6,7 @@ import { validateListing } from "@/apps/scraper/src/core/validate";
 import { db } from "@/db/index";
 import { listings, scrapeRuns, stores } from "@/db/schema";
 import { persistListing } from "@/apps/scraper/src/lib/persist-listing";
+import { revalidateSiteCatalog } from "@/apps/scraper/src/lib/revalidate-site";
 
 const adapters: Record<string, () => StoreAdapter> = {
   startech: createStarTechAdapter,
@@ -83,6 +84,7 @@ async function main() {
   }
 
   process.stdout.write(`Finished ${adapter.name}: ${succeeded}/${attempted} listings saved (${skipped} non-product pages ignored, ${failed} failed).\n`);
+  if (succeeded > 0) await revalidateSiteCatalog();
   if (failed > 0) process.exitCode = 1;
 }
 
