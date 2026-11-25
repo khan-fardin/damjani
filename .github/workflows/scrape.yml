@@ -1,0 +1,53 @@
+name: Daily laptop price refresh
+
+on:
+  schedule:
+    # 21:00 UTC is 03:00 the following day in Bangladesh (UTC+6).
+    - cron: "0 21 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily-laptop-scrape
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      SCRAPER_CONTACT: ${{ secrets.SCRAPER_CONTACT }}
+      REVALIDATE_TOKEN: ${{ secrets.REVALIDATE_TOKEN }}
+      SITE_REVALIDATE_URL: https://damjani.vercel.app/api/revalidate
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Check required repository secrets
+        shell: bash
+        run: |
+          missing=0
+          for name in DATABASE_URL SCRAPER_CONTACT REVALIDATE_TOKEN; do
+            if [[ -z "${!name}" ]]; then
+              echo "::error::Add the $name Actions secret before running scheduled scrapes."
+              missing=1
+            fi
+          done
+          exit "$missing"
+      - name: Refresh Star Tech and Techland laptop listings
+        shell: bash
+        run: |
+          set +e
+          node --import tsx apps/scraper/src/cli.ts startech --category laptop --limit 20
+          startech_status=$?
+          node --import tsx apps/scraper/src/cli.ts techland --category laptop --limit 20
+          techland_status=$?
+          if [[ "$startech_status" -ne 0 || "$techland_status" -ne 0 ]]; then
+            exit 1
+          fi

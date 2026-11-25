@@ -66,7 +66,7 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`. The main routes are `/`, `/search`, `/c/laptops`, and `/p/acer-aspire-3-a324-51`. Search, brand and stock filters, price sorting, configuration selection, and chart range controls are interactive.
+Open `http://localhost:3000`. The main routes are `/`, `/search`, `/c/laptops`, `/p/acer-aspire-3-a324-51`, and `/status`. Search, brand and stock filters, price sorting, configuration selection, and chart range controls are interactive.
 
 ### Project structure
 
@@ -77,7 +77,11 @@ Open `http://localhost:3000`. The main routes are `/`, `/search`, `/c/laptops`, 
 
 In live mode, the homepage, laptop category, and search show Damjani's canonical product cards with their lowest current listed price. The detail page lists matched store offers from lowest to highest. An offer is attached only when its model and known configuration details match; the 20 products can therefore have different store counts. Prices and availability can change and should be confirmed at the retailer. In fallback mode, sample prices and timestamps remain illustrative. The working name is **damjani**; domain and social handle availability have not been checked.
 
-The GitHub Actions workflow is in `.github/workflows/ci.yml`. This workspace is not initialized as a Git repository yet, so CI will activate after repository setup.
+### Scheduled scraper and data status
+
+The GitHub Actions workflow in `.github/workflows/scrape.yml` runs the Star Tech and Techland laptop scrapers daily at about 3:00 AM Bangladesh time and can also be started manually from the Actions tab. Add these repository Actions secrets before enabling it: `DATABASE_URL`, `SCRAPER_CONTACT` (a monitored contact URL or email), and `REVALIDATE_TOKEN` (the same sensitive token configured in Vercel). The workflow records each run in `scrape_runs`; the public `/status` page shows the latest run per store without exposing scraper error details.
+
+The GitHub Actions CI workflow is in `.github/workflows/ci.yml`; it runs lint and build checks on pushes to `main` and pull requests.
 
 ## Phase 2: database and scraper proof of concept
 

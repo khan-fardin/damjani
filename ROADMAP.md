@@ -52,7 +52,9 @@ Live collection needs a real monitored `SCRAPER_CONTACT` in `.env.local`, saved-
 
 ## Phase 5: More stores + automation (ongoing)
 - [ ] Add stores one at a time (target 5, then 10)
-- [ ] Scheduler: discover (daily), refresh-hot (1-3h), refresh-all (daily)
+- [x] Daily scheduled discovery and refresh for Star Tech and Techland (up to 20 laptop listings per store)
+- [x] Read-only `/status` page showing each store's latest run and result counts
+- [ ] Separate hot-listing refresh (1-3h) from full catalog refresh (daily)
 - [ ] Health alerts (Telegram/Discord/email) when an adapter's success rate drops
 - [ ] Anomaly detection for suspicious price jumps
 - [ ] Price history charts populated from real snapshots
